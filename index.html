@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>TS Bank — Secure Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --gold:#c9a84c;--gold2:#e8c96a;--gold3:#8b6914;
+      --bg:#04050b;--card:rgba(255,255,255,0.035);
+      --border:rgba(255,255,255,0.08);--border2:rgba(201,168,76,0.25);
+      --text:#e8e6e1;--muted:rgba(255,255,255,0.38);
+    }
+    body{
+      font-family:'DM Sans',sans-serif;
+      background:var(--bg);min-height:100vh;
+      display:flex;overflow:hidden;
+    }
+    /* ── LEFT PANEL ── */
+    .left-panel{
+      width:55%;min-height:100vh;
+      position:relative;overflow:hidden;
+      background:linear-gradient(160deg,#07080f 0%,#0c0d18 40%,#080910 100%);
+      display:flex;flex-direction:column;justify-content:space-between;padding:48px;
+    }
+    .left-panel::before{
+      content:'';position:absolute;inset:0;
+      background:
+        radial-gradient(ellipse 60% 50% at 80% 20%,rgba(201,168,76,0.09) 0%,transparent 70%),
+        radial-gradient(ellipse 40% 60% at 10% 80%,rgba(30,58,138,0.12) 0%,transparent 60%);
+    }
+    .grid-overlay{
+      position:absolute;inset:0;
+      background-image:
+        linear-gradient(rgba(201,168,76,0.03) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(201,168,76,0.03) 1px,transparent 1px);
+      background-size:60px 60px;
+      mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 40%,transparent 100%);
+    }
+    .brand{position:relative;z-index:2;}
+    .brand-icon{
+      width:52px;height:52px;
+      background:linear-gradient(135deg,#c9a84c,#8b6914);
+      border-radius:14px;display:flex;align-items:center;justify-content:center;
+      box-shadow:0 8px 32px rgba(201,168,76,0.35),0 2px 8px rgba(0,0,0,0.5);
+      margin-bottom:16px;
+    }
+    .brand h1{
+      font-family:'Cormorant Garamond',serif;
+      font-size:2rem;font-weight:600;color:#fff;letter-spacing:0.02em;
+    }
+    .brand h1 span{color:var(--gold);}
+    .brand p{color:var(--muted);font-size:0.72rem;letter-spacing:0.18em;margin-top:4px;}
+    
+    /* Floating card */
+    .hero-card{
+      position:relative;z-index:2;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(201,168,76,0.18);
+      border-radius:22px;padding:32px;
+      backdrop-filter:blur(10px);
+      animation:floatCard 8s ease-in-out infinite;
+    }
+    @keyframes floatCard{
+      0%,100%{transform:translateY(0px);}
+      50%{transform:translateY(-12px);}
+    }
+    .hero-card-label{
+      font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;
+      color:rgba(201,168,76,0.6);margin-bottom:8px;
+    }
+    .hero-balance{
+      font-family:'Cormorant Garamond',serif;
+      font-size:3rem;font-weight:600;color:#fff;margin-bottom:4px;
+    }
+    .hero-balance span{color:var(--gold);}
+    .hero-chips{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
+    .hero-chip{
+      display:flex;align-items:center;gap:7px;
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.09);
+      border-radius:99px;padding:7px 14px;font-size:0.78rem;color:var(--text);
+    }
+    .hero-chip-dot{width:7px;height:7px;border-radius:50%;}
+    .hero-card-footer{
+      display:flex;justify-content:space-between;align-items:center;margin-top:28px;
+      padding-top:20px;border-top:1px solid rgba(255,255,255,0.07);
+    }
+    .hero-acct{font-family:'JetBrains Mono',monospace;font-size:0.88rem;color:var(--muted);}
+    .hero-badge{
+      background:rgba(201,168,76,0.12);
+      border:1px solid rgba(201,168,76,0.25);
+      border-radius:99px;padding:5px 12px;font-size:0.73rem;color:var(--gold);
+      font-weight:500;
+    }
+    
+    .left-footer{position:relative;z-index:2;}
+    .trust-row{display:flex;gap:24px;flex-wrap:wrap;}
+    .trust-item{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:0.78rem;}
+    .trust-item svg{opacity:0.5;}
+    
+    /* ── RIGHT PANEL ── */
+    .right-panel{
+      width:45%;min-height:100vh;
+      background:#06070d;
+      border-left:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;
+      padding:48px 52px;
+    }
+    .login-wrap{width:100%;max-width:380px;}
+    
+    .login-header{margin-bottom:40px;animation:slideUp 0.7s cubic-bezier(0.16,1,0.3,1) both;}
+    .login-header h2{
+      font-family:'Cormorant Garamond',serif;
+      font-size:2.2rem;font-weight:600;color:#fff;margin-bottom:8px;
+    }
+    .login-header p{color:var(--muted);font-size:0.9rem;line-height:1.6;}
+    
+    .secure-badge{
+      display:inline-flex;align-items:center;gap:6px;
+      background:rgba(34,197,94,0.08);
+      border:1px solid rgba(34,197,94,0.2);
+      border-radius:99px;padding:5px 12px;
+      font-size:0.73rem;color:#4ade80;margin-bottom:24px;
+      animation:slideUp 0.7s 0.05s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .secure-dot{
+      width:6px;height:6px;border-radius:50%;background:#4ade80;
+      animation:blink 2s ease-in-out infinite;
+    }
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+    
+    @keyframes slideUp{
+      from{opacity:0;transform:translateY(24px);}
+      to{opacity:1;transform:translateY(0);}
+    }
+    
+    .form-group{margin-bottom:20px;animation:slideUp 0.7s cubic-bezier(0.16,1,0.3,1) both;}
+    .form-group:nth-child(1){animation-delay:0.1s;}
+    .form-group:nth-child(2){animation-delay:0.15s;}
+    
+    .field-label{
+      display:flex;justify-content:space-between;align-items:center;
+      font-size:0.73rem;letter-spacing:0.08em;text-transform:uppercase;
+      color:var(--muted);margin-bottom:9px;
+    }
+    .field-label a{color:var(--gold);text-decoration:none;font-size:0.78rem;letter-spacing:0;text-transform:none;}
+    .field-label a:hover{text-decoration:underline;}
+    
+    .input-wrap{position:relative;}
+    .input-wrap svg{
+      position:absolute;left:15px;top:50%;transform:translateY(-50%);
+      opacity:0.35;pointer-events:none;transition:opacity 0.2s;
+    }
+    input.field-input{
+      width:100%;
+      background:rgba(255,255,255,0.05);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:14px 15px 14px 44px;
+      color:#fff;
+      font-family:'DM Sans',sans-serif;
+      font-size:0.95rem;
+      outline:none;
+      transition:all 0.25s;
+    }
+    input.field-input::placeholder{color:rgba(255,255,255,0.2);}
+    input.field-input:focus{
+      border-color:rgba(201,168,76,0.55);
+      background:rgba(201,168,76,0.05);
+      box-shadow:0 0 0 3px rgba(201,168,76,0.1);
+    }
+    input.field-input:focus + svg, .input-wrap:focus-within svg{opacity:0.7;}
+    .pw-toggle{
+      position:absolute;right:14px;top:50%;transform:translateY(-50%);
+      background:none;border:none;color:var(--muted);cursor:pointer;
+      padding:4px;transition:color 0.2s;
+    }
+    .pw-toggle:hover{color:var(--gold);}
+    
+    .options-row{
+      display:flex;align-items:center;justify-content:space-between;
+      margin-bottom:28px;animation:slideUp 0.7s 0.2s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .remember{display:flex;align-items:center;gap:9px;cursor:pointer;color:var(--muted);font-size:0.83rem;}
+    .remember input[type=checkbox]{
+      appearance:none;width:18px;height:18px;
+      border:1px solid rgba(255,255,255,0.2);border-radius:5px;
+      background:rgba(255,255,255,0.05);cursor:pointer;
+      position:relative;transition:all 0.2s;flex-shrink:0;
+    }
+    .remember input[type=checkbox]:checked{
+      background:var(--gold);border-color:var(--gold);
+    }
+    .remember input[type=checkbox]:checked::after{
+      content:'✓';position:absolute;top:50%;left:50%;
+      transform:translate(-50%,-50%);
+      font-size:0.7rem;color:#000;font-weight:700;
+    }
+    
+    .err-box{
+      background:rgba(239,68,68,0.1);
+      border:1px solid rgba(239,68,68,0.28);
+      border-radius:12px;padding:12px 16px;
+      display:flex;align-items:center;gap:10px;
+      color:#fca5a5;font-size:0.85rem;
+      margin-bottom:18px;display:none;
+      animation:slideUp 0.3s cubic-bezier(0.16,1,0.3,1);
+    }
+    
+    .btn-signin{
+      width:100%;padding:15px;
+      background:linear-gradient(135deg,#c9a84c,#a07828);
+      border:none;border-radius:13px;
+      color:#fff;
+      font-family:'Cormorant Garamond',serif;
+      font-size:1.1rem;font-weight:600;letter-spacing:0.06em;
+      cursor:pointer;transition:all 0.25s;
+      box-shadow:0 6px 24px rgba(201,168,76,0.3),0 2px 6px rgba(0,0,0,0.3);
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      animation:slideUp 0.7s 0.25s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .btn-signin:hover{
+      transform:translateY(-2px);
+      box-shadow:0 12px 36px rgba(201,168,76,0.45),0 4px 10px rgba(0,0,0,0.4);
+    }
+    .btn-signin:active{transform:translateY(0);}
+    
+    .divider{
+      display:flex;align-items:center;gap:14px;
+      margin:24px 0;color:var(--muted);font-size:0.78rem;
+      animation:slideUp 0.7s 0.3s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .divider::before,.divider::after{
+      content:'';flex:1;height:1px;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent);
+    }
+    
+    .quick-access{
+      display:grid;grid-template-columns:1fr 1fr;gap:10px;
+      animation:slideUp 0.7s 0.35s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .qa-pill{
+      background:rgba(255,255,255,0.04);
+      border:1px solid var(--border);
+      border-radius:11px;padding:12px;
+      text-align:center;cursor:pointer;transition:all 0.2s;
+    }
+    .qa-pill:hover{background:rgba(255,255,255,0.07);border-color:rgba(201,168,76,0.2);}
+    .qa-pill-icon{font-size:1.2rem;margin-bottom:4px;}
+    .qa-pill-label{font-size:0.78rem;color:var(--muted);}
+    .qa-pill-user{font-size:0.8rem;color:var(--gold);font-weight:500;font-family:'JetBrains Mono',monospace;}
+    
+    .demo-hint{
+      background:rgba(201,168,76,0.06);
+      border:1px solid rgba(201,168,76,0.15);
+      border-radius:11px;padding:12px 16px;
+      font-size:0.8rem;color:rgba(201,168,76,0.8);
+      text-align:center;margin-top:22px;
+      animation:slideUp 0.7s 0.4s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .demo-hint strong{color:var(--gold);}
+    
+    .login-footer{
+      margin-top:32px;text-align:center;
+      color:var(--muted);font-size:0.75rem;line-height:1.8;
+      animation:slideUp 0.7s 0.45s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .login-footer a{color:rgba(201,168,76,0.7);text-decoration:none;}
+    .login-footer a:hover{color:var(--gold);}
+    
+    /* Animated particles */
+    .particles{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none;}
+    .particle{
+      position:absolute;width:2px;height:2px;background:rgba(201,168,76,0.4);
+      border-radius:50%;animation:particleDrift linear infinite;
+    }
+    @keyframes particleDrift{
+      0%{transform:translateY(100vh) translateX(0);opacity:0;}
+      10%{opacity:1;}
+      90%{opacity:0.3;}
+      100%{transform:translateY(-100px) translateX(60px);opacity:0;}
+    }
+    
+    /* Progress loading bar */
+    .loading-bar{
+      position:fixed;top:0;left:0;height:2px;
+      background:linear-gradient(90deg,#c9a84c,#e8c96a);
+      width:0%;transition:width 0.4s ease;z-index:999;
+    }
+    
+    @media(max-width:768px){
+      .left-panel{display:none;}
+      .right-panel{width:100%;padding:32px 24px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-bar" id="loadingBar"></div>
+  
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="grid-overlay"></div>
+    <div class="particles" id="particles"></div>
+    
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="26" height="26" fill="none" stroke="#fff" stroke-width="2.2" viewBox="0 0 24 24">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <h1>TS <span>Bank</span></h1>
+      <p>PREMIUM DIGITAL BANKING</p>
+    </div>
+    
+    <div class="hero-card">
+      <div class="hero-card-label">Checking Account</div>
+      <div class="hero-balance">$<span id="animBal">0.00</span></div>
+      <div style="font-size:0.82rem;color:var(--muted);margin-top:4px;">Available Balance</div>
+      <div class="hero-chips">
+        <div class="hero-chip"><div class="hero-chip-dot" style="background:#22c55e;"></div>Savings Active</div>
+        <div class="hero-chip"><div class="hero-chip-dot" style="background:var(--gold);"></div>Premium Tier</div>
+        <div class="hero-chip"><div class="hero-chip-dot" style="background:#3b82f6;"></div>FDIC Insured</div>
+      </div>
+      <div class="hero-card-footer">
+        <div class="hero-acct">••••  ••••  ••••  4821</div>
+        <div class="hero-badge">✦ Gold Member</div>
+      </div>
+    </div>
+    
+    <div class="left-footer">
+      <div class="trust-row">
+        <div class="trust-item">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          256-bit SSL
+        </div>
+        <div class="trust-item">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Bank-Grade Security
+        </div>
+        <div class="trust-item">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          FDIC Insured
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="login-wrap">
+      <div class="secure-badge">
+        <div class="secure-dot"></div>
+        Secure Connection Established
+      </div>
+      
+      <div class="login-header">
+        <h2>Welcome Back</h2>
+        <p>Sign in to access your accounts, transfers, and financial tools.</p>
+      </div>
+      
+      <div id="errBox" class="err-box">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="errMsg">Invalid credentials. Please try again.</span>
+      </div>
+      
+      <div class="form-group">
+        <div class="field-label">
+          <span>Username</span>
+        </div>
+        <div class="input-wrap">
+          <input id="un" class="field-input" type="text" placeholder="Enter your username" autocomplete="username"/>
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="position:absolute;left:15px;top:50%;transform:translateY(-50%);opacity:0.35;pointer-events:none;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <div class="field-label">
+          <span>Password</span>
+          <a href="#">Forgot password?</a>
+        </div>
+        <div class="input-wrap">
+          <input id="pw" class="field-input" type="password" placeholder="Enter your password" autocomplete="current-password"/>
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="position:absolute;left:15px;top:50%;transform:translateY(-50%);opacity:0.35;pointer-events:none;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <button class="pw-toggle" id="pwToggle" type="button" onclick="togglePw()">
+            <svg id="eyeIcon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      
+      <div class="options-row">
+        <label class="remember">
+          <input type="checkbox" id="rememberMe"/>
+          Remember this device
+        </label>
+      </div>
+      
+      <button class="btn-signin" id="btnSignIn" onclick="doLogin()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Sign In Securely
+      </button>
+      
+      <div class="divider">or sign in as demo user</div>
+      
+      <div class="quick-access">
+        <div class="qa-pill" onclick="quickLogin('admin','1234')">
+          <div class="qa-pill-icon">👤</div>
+          <div class="qa-pill-user">admin</div>
+          <div class="qa-pill-label">Administrator</div>
+        </div>
+        <div class="qa-pill" onclick="quickLogin('demo','demo')">
+          <div class="qa-pill-icon">🧪</div>
+          <div class="qa-pill-user">demo</div>
+          <div class="qa-pill-label">Demo Account</div>
+        </div>
+      </div>
+      
+      <div class="demo-hint">
+        🔑 Demo credentials: <strong>admin</strong> / <strong>1234</strong>
+      </div>
+      
+      <div class="login-footer">
+        Protected by <a href="#">TS Bank Security</a> · <a href="#">Privacy Policy</a> · <a href="#">Terms</a><br>
+        © 2025 TS Bank N.A. Member FDIC. Equal Housing Lender.
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Animated balance counter
+    function animateBalance(){
+      const el=document.getElementById('animBal');
+      const target=12486.52;
+      let current=0;const dur=2000;const start=Date.now();
+      function tick(){
+        const elapsed=Date.now()-start;
+        const progress=Math.min(elapsed/dur,1);
+        const ease=1-Math.pow(1-progress,4);
+        current=target*ease;
+        el.textContent=current.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+        if(progress<1)requestAnimationFrame(tick);
+      }
+      setTimeout(()=>requestAnimationFrame(tick),600);
+    }
+    animateBalance();
+    
+    // Particles
+    const pc=document.getElementById('particles');
+    for(let i=0;i<18;i++){
+      const p=document.createElement('div');
+      p.className='particle';
+      p.style.left=Math.random()*100+'%';
+      p.style.animationDuration=(8+Math.random()*14)+'s';
+      p.style.animationDelay=(Math.random()*12)+'s';
+      p.style.width=p.style.height=(1+Math.random()*2)+'px';
+      p.style.opacity=Math.random()*0.5+0.1;
+      pc.appendChild(p);
+    }
+    
+    // Auth
+    const USERS=[{u:'admin',p:'1234'},{u:'user',p:'pass'},{u:'demo',p:'demo'}];
+    function doLogin(){
+      const u=document.getElementById('un').value.trim();
+      const p=document.getElementById('pw').value.trim();
+      const err=document.getElementById('errBox');
+      if(!u||!p){
+        err.style.display='flex';
+        document.getElementById('errMsg').textContent='Please enter your username and password.';
+        return;
+      }
+      if(USERS.find(x=>x.u===u&&x.p===p)){
+        err.style.display='none';
+        const lb=document.getElementById('loadingBar');
+        lb.style.width='30%';
+        const btn=document.getElementById('btnSignIn');
+        btn.innerHTML='<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Verified — Redirecting...';
+        btn.style.background='linear-gradient(135deg,#16a34a,#15803d)';
+        sessionStorage.setItem('tsbank_user',u);
+        setTimeout(()=>{lb.style.width='80%';},200);
+        setTimeout(()=>{lb.style.width='100%';},500);
+        setTimeout(()=>{location.href='bank.html';},700);
+      } else {
+        err.style.display='flex';
+        document.getElementById('errMsg').textContent='Invalid username or password. Please try again.';
+        document.getElementById('pw').value='';
+        document.getElementById('pw').focus();
+        document.getElementById('un').style.borderColor='rgba(239,68,68,0.5)';
+        document.getElementById('pw').style.borderColor='rgba(239,68,68,0.5)';
+        setTimeout(()=>{
+          document.getElementById('un').style.borderColor='';
+          document.getElementById('pw').style.borderColor='';
+        },1500);
+      }
+    }
+    function quickLogin(u,p){
+      document.getElementById('un').value=u;
+      document.getElementById('pw').value=p;
+      setTimeout(doLogin,300);
+    }
+    function togglePw(){
+      const pw=document.getElementById('pw');
+      const icon=document.getElementById('eyeIcon');
+      if(pw.type==='password'){
+        pw.type='text';
+        icon.innerHTML='<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+      } else {
+        pw.type='password';
+        icon.innerHTML='<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+      }
+    }
+    document.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+  </script>
+</body>
+</html>

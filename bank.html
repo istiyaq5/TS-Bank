@@ -1,0 +1,1679 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>TS Bank — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --gold:#c9a84c;--gold2:#e8c96a;--gold3:rgba(201,168,76,0.1);--gold4:rgba(201,168,76,0.22);
+      --bg:#04050b;--bg2:#08090f;--bg3:#0d0f1a;
+      --card:rgba(255,255,255,0.035);--card2:rgba(255,255,255,0.06);
+      --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+      --text:rgba(255,255,255,0.88);--muted:rgba(255,255,255,0.38);--muted2:rgba(255,255,255,0.22);
+      --green:#22c55e;--red:#ef4444;--blue:#3b82f6;--purple:#a855f7;
+      --sidebar:240px;
+    }
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+    
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar{width:4px;height:4px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:99px}
+
+    /* ── SIDEBAR ── */
+    .sidebar{
+      width:var(--sidebar);min-height:100vh;
+      background:var(--bg2);
+      border-right:1px solid var(--border);
+      display:flex;flex-direction:column;
+      position:fixed;left:0;top:0;bottom:0;z-index:100;
+    }
+    .sb-logo{
+      padding:28px 22px 22px;
+      border-bottom:1px solid var(--border);
+    }
+    .sb-logo-row{display:flex;align-items:center;gap:11px;}
+    .sb-logo-icon{
+      width:38px;height:38px;flex-shrink:0;
+      background:linear-gradient(135deg,#c9a84c,#8b6914);
+      border-radius:11px;display:flex;align-items:center;justify-content:center;
+      box-shadow:0 4px 16px rgba(201,168,76,0.3);
+    }
+    .sb-logo h2{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:600;color:#fff;}
+    .sb-logo h2 span{color:var(--gold);}
+    .sb-logo-sub{font-size:0.62rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted2);margin-top:4px;}
+
+    .sb-user{padding:16px 22px;border-bottom:1px solid var(--border);}
+    .sb-avatar{
+      width:40px;height:40px;border-radius:50%;
+      background:linear-gradient(135deg,#7c3aed,#4f46e5);
+      display:flex;align-items:center;justify-content:center;
+      font-size:1rem;font-weight:700;margin-bottom:9px;
+      box-shadow:0 4px 14px rgba(124,58,237,0.3);
+    }
+    .sb-username{font-size:0.88rem;font-weight:600;color:#fff;}
+    .sb-member{font-size:0.7rem;color:var(--gold);margin-top:2px;}
+    .sb-status{display:flex;align-items:center;gap:5px;font-size:0.72rem;color:var(--green);margin-top:3px;}
+    .sb-status::before{content:'';width:5px;height:5px;background:var(--green);border-radius:50%;display:inline-block;animation:blink 2s ease-in-out infinite;}
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+    nav{padding:14px 10px;flex:1;overflow-y:auto;}
+    .nav-section{font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted2);padding:0 12px;margin:10px 0 5px;}
+    .nav-item{
+      display:flex;align-items:center;gap:11px;
+      padding:9px 13px;border-radius:10px;cursor:pointer;
+      transition:all 0.18s;color:var(--muted);
+      font-size:0.86rem;margin-bottom:1px;
+      border:1px solid transparent;position:relative;
+    }
+    .nav-item svg{flex-shrink:0;opacity:0.6;transition:opacity 0.18s;}
+    .nav-item:hover{background:rgba(255,255,255,0.04);color:var(--text);}
+    .nav-item.active{background:var(--gold3);border-color:var(--gold4);color:var(--gold);}
+    .nav-item.active svg{opacity:1;}
+    .nav-badge{
+      margin-left:auto;background:var(--red);color:#fff;
+      border-radius:20px;padding:1px 7px;font-size:0.66rem;font-weight:600;
+    }
+    .nav-badge.gold{background:var(--gold);color:#000;}
+
+    .sb-bottom{padding:14px;border-top:1px solid var(--border);}
+    .btn-logout{
+      width:100%;padding:10px;
+      background:rgba(239,68,68,0.08);
+      border:1px solid rgba(239,68,68,0.18);
+      border-radius:10px;color:#fca5a5;
+      font-family:'DM Sans',sans-serif;font-size:0.83rem;cursor:pointer;
+      transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:7px;
+    }
+    .btn-logout:hover{background:rgba(239,68,68,0.16);}
+
+    /* ── MAIN ── */
+    .main{margin-left:var(--sidebar);flex:1;min-height:100vh;padding-bottom:60px;}
+    .topbar{
+      background:rgba(4,5,11,0.92);backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--border);
+      padding:0 36px;height:62px;
+      display:flex;align-items:center;justify-content:space-between;
+      position:sticky;top:0;z-index:50;
+    }
+    .topbar-left{display:flex;align-items:center;gap:12px;}
+    .topbar-title{font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:#fff;}
+    .topbar-date{font-size:0.78rem;color:var(--muted);margin-left:4px;}
+    .topbar-right{display:flex;align-items:center;gap:18px;}
+    .topbar-bal-label{font-size:0.73rem;color:var(--muted);letter-spacing:0.04em;}
+    .topbar-bal{font-family:'JetBrains Mono',monospace;font-size:1.05rem;color:var(--gold);font-weight:600;}
+    .notif-btn{
+      width:34px;height:34px;border-radius:9px;
+      background:rgba(255,255,255,0.05);border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;cursor:pointer;
+      transition:all 0.2s;position:relative;
+    }
+    .notif-btn:hover{background:rgba(255,255,255,0.09);}
+    .notif-dot{
+      position:absolute;top:6px;right:6px;
+      width:7px;height:7px;border-radius:50%;
+      background:var(--red);border:1.5px solid var(--bg2);
+    }
+
+    .page{display:none;padding:32px 36px;}
+    .page.active{display:block;animation:pageIn 0.35s cubic-bezier(0.16,1,0.3,1) both;}
+    @keyframes pageIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+    /* ── CARDS ── */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;}
+    .card-gold{background:linear-gradient(135deg,#0f0e08,#1a1810);border:1px solid var(--gold4);}
+    .card-hover{transition:transform 0.2s,box-shadow 0.2s;}
+    .card-hover:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.2);}
+
+    h2.section-title{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:600;color:#fff;margin-bottom:4px;}
+    .section-sub{color:var(--muted);font-size:0.84rem;margin-bottom:26px;}
+
+    /* ── BALANCE HERO ── */
+    .balance-hero{
+      background:linear-gradient(135deg,#0c0b06,#151208,#09090f);
+      border:1px solid rgba(201,168,76,0.18);
+      border-radius:20px;padding:34px;
+      position:relative;overflow:hidden;margin-bottom:20px;
+    }
+    .balance-hero::before{
+      content:'';position:absolute;top:-80px;right:-80px;
+      width:280px;height:280px;
+      background:radial-gradient(circle,rgba(201,168,76,0.1),transparent 70%);border-radius:50%;
+    }
+    .balance-hero::after{
+      content:'';position:absolute;bottom:-60px;left:20%;
+      width:200px;height:200px;
+      background:radial-gradient(circle,rgba(30,58,138,0.08),transparent 70%);border-radius:50%;
+    }
+    .balance-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+    .balance-label{font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:rgba(201,168,76,0.55);}
+    .balance-acct{font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:var(--muted);}
+    .balance-amount{
+      font-family:'Cormorant Garamond',serif;
+      font-size:3.4rem;font-weight:600;color:#fff;letter-spacing:-0.01em;
+      margin-bottom:4px;position:relative;z-index:1;
+    }
+    .balance-amount span{color:var(--gold);}
+    .balance-sub{font-size:0.8rem;color:var(--muted);position:relative;z-index:1;}
+    .balance-row{display:flex;gap:28px;margin-top:18px;position:relative;z-index:1;}
+    .bal-stat{display:flex;flex-direction:column;gap:3px;}
+    .bal-stat-label{font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted2);}
+    .bal-stat-val{font-family:'JetBrains Mono',monospace;font-size:0.9rem;font-weight:500;}
+    .balance-chips{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;position:relative;z-index:1;}
+    .chip{
+      display:flex;align-items:center;gap:7px;
+      background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);
+      border-radius:99px;padding:6px 14px;font-size:0.78rem;
+    }
+    .chip-dot{width:6px;height:6px;border-radius:50%;}
+
+    /* ── STATS ROW ── */
+    .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+    .stat-card{
+      background:var(--card);border:1px solid var(--border);border-radius:14px;
+      padding:18px 20px;transition:transform 0.2s,border-color 0.2s;cursor:default;
+    }
+    .stat-card:hover{transform:translateY(-2px);border-color:var(--border2);}
+    .stat-label{font-size:0.7rem;letter-spacing:0.09em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;display:flex;align-items:center;gap:6px;}
+    .stat-val{font-family:'JetBrains Mono',monospace;font-size:1.45rem;font-weight:600;}
+    .stat-change{font-size:0.75rem;margin-top:5px;}
+
+    /* ── QUICK ACTIONS ── */
+    .quick-actions{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;}
+    .qa-btn{
+      background:var(--card);border:1px solid var(--border);border-radius:14px;
+      padding:18px 10px;text-align:center;cursor:pointer;transition:all 0.2s;
+    }
+    .qa-btn:hover{background:var(--card2);border-color:var(--border2);transform:translateY(-3px);}
+    .qa-icon{width:42px;height:42px;border-radius:11px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;}
+    .qa-label{font-size:0.78rem;color:var(--text);}
+
+    /* ── SPENDING CHART ── */
+    .spending-chart-wrap{height:80px;display:flex;align-items:flex-end;gap:5px;margin-top:16px;}
+    .bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;}
+    .bar{width:100%;border-radius:4px 4px 0 0;background:rgba(201,168,76,0.2);transition:height 0.6s cubic-bezier(0.16,1,0.3,1);cursor:pointer;position:relative;}
+    .bar:hover{background:rgba(201,168,76,0.45);}
+    .bar.current{background:linear-gradient(180deg,var(--gold2),var(--gold));}
+    .bar-label{font-size:0.6rem;color:var(--muted);letter-spacing:0.04em;}
+
+    /* ── FORM ELEMENTS ── */
+    .form-label{font-size:0.7rem;letter-spacing:0.09em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:7px;}
+    .form-input{
+      width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border);
+      border-radius:10px;padding:12px 14px;color:#fff;
+      font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;transition:all 0.2s;
+    }
+    .form-input::placeholder{color:var(--muted2);}
+    .form-input:focus{border-color:rgba(201,168,76,0.5);background:rgba(201,168,76,0.04);box-shadow:0 0 0 3px rgba(201,168,76,0.1);}
+    .form-input[readonly]{color:var(--muted);cursor:default;}
+    .form-select{
+      appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='rgba(255,255,255,0.35)' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;background-position:right 13px center;
+    }
+    .btn-primary{
+      background:linear-gradient(135deg,#c9a84c,#a07828);
+      border:none;border-radius:10px;padding:12px 24px;color:#fff;
+      font-family:'Cormorant Garamond',serif;font-size:0.98rem;font-weight:600;letter-spacing:0.05em;
+      cursor:pointer;transition:all 0.2s;
+      box-shadow:0 4px 16px rgba(201,168,76,0.28);
+    }
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(201,168,76,0.4);}
+    .btn-primary:active{transform:translateY(0);}
+    .btn-green{background:linear-gradient(135deg,#16a34a,#15803d);box-shadow:0 4px 16px rgba(22,163,74,0.26);}
+    .btn-green:hover{box-shadow:0 8px 26px rgba(22,163,74,0.38);}
+    .btn-red{background:linear-gradient(135deg,#dc2626,#b91c1c);box-shadow:0 4px 16px rgba(220,38,38,0.26);}
+    .btn-red:hover{box-shadow:0 8px 26px rgba(220,38,38,0.38);}
+    .btn-ghost{
+      background:rgba(255,255,255,0.05);border:1px solid var(--border);
+      border-radius:10px;padding:12px 20px;color:var(--text);
+      font-family:'DM Sans',sans-serif;font-size:0.88rem;cursor:pointer;transition:all 0.2s;
+    }
+    .btn-ghost:hover{background:rgba(255,255,255,0.09);}
+    .btn-full{width:100%;}
+    .field{margin-bottom:16px;}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+
+    /* ── TOAST ── */
+    .toast{
+      position:fixed;top:20px;right:20px;
+      padding:13px 20px;border-radius:12px;font-size:0.86rem;font-weight:500;
+      z-index:9999;opacity:0;transform:translateX(20px);
+      transition:all 0.3s cubic-bezier(0.16,1,0.3,1);pointer-events:none;
+      max-width:320px;backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,0.1);
+      display:flex;align-items:center;gap:10px;
+    }
+    .toast.show{opacity:1;transform:translateX(0);}
+    .toast.s{background:rgba(22,163,74,0.92);color:#fff;}
+    .toast.e{background:rgba(220,38,38,0.92);color:#fff;}
+    .toast.i{background:rgba(59,130,246,0.92);color:#fff;}
+    .toast.w{background:rgba(201,168,76,0.92);color:#000;}
+
+    /* ── TRANSACTIONS ── */
+    .tx-list{display:flex;flex-direction:column;gap:8px;}
+    .tx-item{
+      display:flex;align-items:center;gap:13px;
+      padding:13px 15px;
+      background:rgba(255,255,255,0.03);border:1px solid var(--border);
+      border-radius:12px;transition:background 0.15s;
+    }
+    .tx-item:hover{background:rgba(255,255,255,0.06);}
+    .tx-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+    .tx-info{flex:1;min-width:0;}
+    .tx-name{font-size:0.86rem;font-weight:500;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .tx-date{font-size:0.72rem;color:var(--muted);margin-top:2px;}
+    .tx-cat{font-size:0.72rem;color:var(--muted2);margin-top:1px;}
+    .tx-amt{font-family:'JetBrains Mono',monospace;font-size:0.9rem;font-weight:600;white-space:nowrap;}
+    .tx-amt.pos{color:var(--green);}
+    .tx-amt.neg{color:var(--red);}
+    .tx-status{font-size:0.66rem;color:var(--muted2);text-align:right;margin-top:2px;}
+    .empty{text-align:center;padding:44px 0;color:var(--muted);font-size:0.88rem;}
+
+    /* ── COUPON ── */
+    .coupon-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px;}
+    .coupon-card{
+      background:var(--card);border:1px dashed rgba(201,168,76,0.25);
+      border-radius:14px;padding:20px;position:relative;overflow:hidden;
+      transition:all 0.2s;
+    }
+    .coupon-card:not(.used):hover{border-color:rgba(201,168,76,0.5);transform:translateY(-2px);}
+    .coupon-card.used{opacity:0.4;filter:grayscale(0.6);}
+    .coupon-circle-l,.coupon-circle-r{
+      position:absolute;top:50%;transform:translateY(-50%);
+      width:18px;height:18px;border-radius:50%;background:var(--bg);
+    }
+    .coupon-circle-l{left:-9px;}
+    .coupon-circle-r{right:-9px;}
+    .coupon-tag{font-size:0.66rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:5px;}
+    .coupon-code{font-family:'JetBrains Mono',monospace;font-size:1.2rem;font-weight:600;color:#fff;margin-bottom:4px;}
+    .coupon-desc{font-size:0.78rem;color:var(--muted);}
+    .coupon-amt{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:600;color:var(--gold);margin-top:10px;}
+    .coupon-used-badge{position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.07);border-radius:20px;padding:2px 9px;font-size:0.68rem;color:var(--muted);}
+
+    /* ── SPIN WHEEL ── */
+    .spin-wheel-wrap{display:flex;flex-direction:column;align-items:center;padding:16px 0;}
+    .spin-pointer-wrap{position:relative;z-index:2;margin-bottom:-6px;}
+    .spin-pointer{font-size:1.6rem;filter:drop-shadow(0 4px 8px rgba(201,168,76,0.4));}
+    .spin-canvas-ring{
+      border-radius:50%;padding:6px;
+      background:linear-gradient(135deg,rgba(201,168,76,0.3),rgba(201,168,76,0.05));
+    }
+    
+    /* ── STREAK ── */
+    .streak-row{display:flex;gap:8px;flex-wrap:wrap;}
+    .streak-day{
+      flex:1;min-width:56px;
+      background:rgba(255,255,255,0.04);border:1px solid var(--border);
+      border-radius:11px;padding:11px 7px;text-align:center;transition:all 0.2s;
+    }
+    .streak-day.done{background:rgba(201,168,76,0.08);border-color:rgba(201,168,76,0.25);}
+    .streak-day.today{background:rgba(201,168,76,0.14);border-color:rgba(201,168,76,0.45);box-shadow:0 0 16px rgba(201,168,76,0.15);}
+    .streak-day .day-name{font-size:0.66rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;}
+    .streak-day .day-amt{font-size:0.82rem;font-weight:600;color:var(--gold);margin-top:3px;}
+    .streak-day .day-check{font-size:0.88rem;margin-top:3px;}
+
+    /* ── LOANS ── */
+    .loan-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px;}
+    .loan-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+    .loan-id{font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--muted);}
+    .loan-badge{padding:3px 11px;border-radius:20px;font-size:0.7rem;font-weight:600;}
+    .lb-active{background:rgba(59,130,246,0.14);color:#93c5fd;}
+    .lb-pending{background:rgba(234,179,8,0.14);color:#fde047;}
+    .lb-paid{background:rgba(22,163,74,0.14);color:#86efac;}
+    .progress-bar{background:rgba(255,255,255,0.07);border-radius:99px;height:5px;overflow:hidden;margin:10px 0;}
+    .progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width 0.6s;}
+
+    /* ── TRANSFER CONTACTS ── */
+    .contact-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+    .contact-chip{
+      background:var(--card);border:1px solid var(--border);
+      border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;transition:all 0.2s;
+    }
+    .contact-chip:hover,.contact-chip.selected{background:var(--gold3);border-color:var(--gold4);}
+    .contact-av{width:36px;height:36px;border-radius:50%;margin:0 auto 7px;display:flex;align-items:center;justify-content:center;font-size:0.88rem;font-weight:700;}
+    .contact-name{font-size:0.74rem;color:var(--text);}
+
+    /* ── BILLS ── */
+    .bill-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .bill-card{
+      background:var(--card);border:1px solid var(--border);
+      border-radius:14px;padding:18px;cursor:pointer;transition:all 0.2s;position:relative;
+    }
+    .bill-card:hover{background:var(--card2);transform:translateY(-2px);}
+    .bill-card.overdue{border-color:rgba(239,68,68,0.28);}
+    .bill-icon{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:11px;}
+    .bill-name{font-size:0.86rem;font-weight:600;color:#fff;}
+    .bill-due{font-size:0.72rem;color:var(--muted);margin-top:2px;}
+    .bill-amt{font-family:'JetBrains Mono',monospace;font-size:1.05rem;color:#fff;margin-top:7px;}
+    .bill-status{position:absolute;top:12px;right:12px;font-size:0.67rem;padding:2px 9px;border-radius:20px;}
+    .bs-due{background:rgba(239,68,68,0.13);color:#fca5a5;}
+    .bs-paid{background:rgba(22,163,74,0.13);color:#86efac;}
+    .bs-upcoming{background:rgba(201,168,76,0.1);color:var(--gold);}
+
+    /* ── FILTER BAR ── */
+    .filter-bar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px;}
+    .filter-chip{
+      padding:6px 14px;border-radius:99px;border:1px solid var(--border);
+      background:transparent;color:var(--muted);
+      font-family:'DM Sans',sans-serif;font-size:0.78rem;cursor:pointer;transition:all 0.2s;
+    }
+    .filter-chip:hover,.filter-chip.active{background:var(--gold3);border-color:var(--gold4);color:var(--gold);}
+    .search-input{
+      flex:1;min-width:160px;
+      background:rgba(255,255,255,0.04);border:1px solid var(--border);
+      border-radius:99px;padding:7px 16px;color:#fff;
+      font-family:'DM Sans',sans-serif;font-size:0.82rem;outline:none;
+    }
+    .search-input::placeholder{color:var(--muted);}
+    .search-input:focus{border-color:rgba(201,168,76,0.4);}
+
+    /* ── MODAL ── */
+    .modal-overlay{
+      position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);
+      z-index:500;display:flex;align-items:center;justify-content:center;
+      opacity:0;pointer-events:none;transition:opacity 0.25s;
+    }
+    .modal-overlay.open{opacity:1;pointer-events:all;}
+    .modal{
+      background:#0a0b12;border:1px solid var(--border2);border-radius:20px;padding:30px;
+      width:100%;max-width:450px;
+      transform:translateY(16px) scale(0.98);
+      transition:transform 0.3s cubic-bezier(0.16,1,0.3,1);
+    }
+    .modal-overlay.open .modal{transform:translateY(0) scale(1);}
+    .modal h3{font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:#fff;margin-bottom:18px;}
+    .modal-close{float:right;background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:2px;transition:color 0.2s;}
+    .modal-close:hover{color:#fff;}
+
+    /* ── ANIMATIONS ── */
+    .num-pop{animation:numpop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;}
+    @keyframes numpop{0%{transform:scale(1);}50%{transform:scale(1.12);}100%{transform:scale(1);}}
+    .shimmer{
+      background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.05) 50%,transparent 100%);
+      background-size:200% 100%;
+      animation:shimmer 2s infinite;
+    }
+    @keyframes shimmer{0%{background-position:200% center;}100%{background-position:-200% center;}}
+
+    /* ── CREDIT SCORE RING ── */
+    .score-ring-wrap{position:relative;width:100px;height:100px;flex-shrink:0;}
+    .score-ring-wrap svg{transform:rotate(-90deg);}
+    .score-center{
+      position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+      text-align:center;
+    }
+    .score-num{font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:600;color:var(--gold);}
+    .score-label{font-size:0.6rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;}
+
+    /* ── ACCOUNT CARD ── */
+    .bank-card{
+      background:linear-gradient(135deg,#111008,#1c1810,#0c0d17);
+      border:1px solid rgba(201,168,76,0.25);border-radius:18px;
+      padding:28px;position:relative;overflow:hidden;
+      aspect-ratio:1.6/1;display:flex;flex-direction:column;justify-content:space-between;
+    }
+    .bank-card::before{
+      content:'';position:absolute;top:-40px;right:-40px;
+      width:180px;height:180px;
+      border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,0.12),transparent 70%);
+    }
+    .bank-card-logo{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:#fff;}
+    .bank-card-logo span{color:var(--gold);}
+    .bank-card-number{
+      font-family:'JetBrains Mono',monospace;font-size:0.95rem;color:rgba(255,255,255,0.7);
+      letter-spacing:0.22em;
+    }
+    .bank-card-footer{display:flex;justify-content:space-between;align-items:flex-end;}
+    .bank-card-name{font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.55);}
+    .bank-card-expiry-label{font-size:0.6rem;color:rgba(255,255,255,0.35);letter-spacing:0.06em;text-transform:uppercase;}
+    .bank-card-expiry{font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:rgba(255,255,255,0.7);}
+    .chip-icon{
+      width:34px;height:26px;background:linear-gradient(135deg,#c9a84c,#8b6914);
+      border-radius:5px;opacity:0.7;
+    }
+
+    /* ── INSIGHT CARDS ── */
+    .insight-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:18px;}
+    .insight-card{
+      background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;
+      text-align:center;
+    }
+    .insight-icon{font-size:1.4rem;margin-bottom:6px;}
+    .insight-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:600;color:#fff;}
+    .insight-label{font-size:0.7rem;color:var(--muted);margin-top:3px;}
+
+    /* ── NOTIFICATION PANEL ── */
+    .notif-panel{
+      position:fixed;top:72px;right:20px;width:320px;
+      background:#0a0b12;border:1px solid var(--border2);border-radius:16px;
+      z-index:200;opacity:0;pointer-events:none;transform:translateY(-10px);
+      transition:all 0.25s cubic-bezier(0.16,1,0.3,1);
+      box-shadow:0 20px 60px rgba(0,0,0,0.4);
+    }
+    .notif-panel.open{opacity:1;pointer-events:all;transform:translateY(0);}
+    .notif-header{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+    .notif-header h4{font-family:'Cormorant Garamond',serif;font-size:1rem;color:#fff;}
+    .notif-clear{font-size:0.75rem;color:var(--gold);cursor:pointer;}
+    .notif-item{padding:13px 18px;border-bottom:1px solid var(--border);transition:background 0.15s;}
+    .notif-item:hover{background:rgba(255,255,255,0.03);}
+    .notif-item:last-child{border-bottom:none;}
+    .notif-item-title{font-size:0.83rem;font-weight:500;color:#fff;}
+    .notif-item-sub{font-size:0.75rem;color:var(--muted);margin-top:2px;}
+    .notif-badge-num{font-size:0.68rem;background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.25);border-radius:99px;padding:2px 8px;}
+
+    @media(max-width:900px){
+      .stats-row{grid-template-columns:1fr 1fr;}
+      .quick-actions{grid-template-columns:repeat(3,1fr);}
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<!-- NOTIFICATION PANEL -->
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-header">
+    <h4>Notifications</h4>
+    <span class="notif-clear" onclick="clearNotifs()">Mark all read</span>
+  </div>
+  <div id="notifList">
+    <div class="notif-item"><div class="notif-item-title">🔥 Daily bonus available!</div><div class="notif-item-sub">Claim your check-in streak reward</div></div>
+    <div class="notif-item"><div class="notif-item-title">⚠️ Bill due soon</div><div class="notif-item-sub">Rent is due on the 1st — $750.00</div></div>
+    <div class="notif-item"><div class="notif-item-title">🎰 Spin wheel ready</div><div class="notif-item-sub">Your daily lucky spin is available</div></div>
+    <div class="notif-item"><div class="notif-item-title">🏷️ New coupon added</div><div class="notif-item-sub">Use SUMMER2025 for $150 bonus</div></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalBox">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3 id="modalTitle">Confirm</h3>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-row">
+      <div class="sb-logo-icon">
+        <svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2.2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <div>
+        <h2>TS <span>Bank</span></h2>
+        <div class="sb-logo-sub">Premium Banking</div>
+      </div>
+    </div>
+  </div>
+  <div class="sb-user">
+    <div class="sb-avatar" id="sbAvatar">A</div>
+    <div class="sb-username" id="sbName">admin</div>
+    <div class="sb-member">✦ Gold Member</div>
+    <div class="sb-status">Account Active</div>
+  </div>
+  <nav>
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" onclick="showPage('transactions')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Transactions
+    </div>
+    <div class="nav-item" onclick="showPage('accounts')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      My Accounts
+    </div>
+    <div class="nav-section">Banking</div>
+    <div class="nav-item" onclick="showPage('transfer')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      Transfer
+    </div>
+    <div class="nav-item" onclick="showPage('bills')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Pay Bills
+      <span class="nav-badge" id="billsBadge">3</span>
+    </div>
+    <div class="nav-item" onclick="showPage('loans')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Loans & Credit
+    </div>
+    <div class="nav-section">Perks</div>
+    <div class="nav-item" onclick="showPage('coupons')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      Coupons
+    </div>
+    <div class="nav-item" onclick="showPage('rewards')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Rewards
+      <span class="nav-badge gold" id="rewardsBadge">!</span>
+    </div>
+  </nav>
+  <div class="sb-bottom">
+    <button class="btn-logout" onclick="logout()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sign Out
+    </button>
+  </div>
+</aside>
+
+<!-- ══════════ MAIN ══════════ -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title" id="topbarTitle">Dashboard</div>
+      <div class="topbar-date" id="topbarDate"></div>
+    </div>
+    <div class="topbar-right">
+      <div style="text-align:right;">
+        <div class="topbar-bal-label">Available Balance</div>
+        <div class="topbar-bal" id="topbarBal">$1,200.00</div>
+      </div>
+      <div class="notif-btn" onclick="toggleNotif()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot" id="notifDot"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: DASHBOARD ══ -->
+  <div class="page active" id="page-dashboard">
+    <h2 class="section-title" id="greetTitle">Good morning ✦</h2>
+    <p class="section-sub">Here's a complete snapshot of your finances</p>
+
+    <!-- Balance Hero -->
+    <div class="balance-hero">
+      <div class="balance-top">
+        <div class="balance-label">TOTAL AVAILABLE BALANCE</div>
+        <div class="balance-acct">Checking ••••4821</div>
+      </div>
+      <div class="balance-amount">$<span id="heroBalance">1,200.00</span></div>
+      <div class="balance-sub" id="balSub">Account in good standing · No pending holds</div>
+      <div class="balance-row">
+        <div class="bal-stat">
+          <div class="bal-stat-label">Deposited</div>
+          <div class="bal-stat-val" id="balDep" style="color:var(--green)">$0.00</div>
+        </div>
+        <div class="bal-stat">
+          <div class="bal-stat-label">Withdrawn</div>
+          <div class="bal-stat-val" id="balWith" style="color:var(--red)">$0.00</div>
+        </div>
+        <div class="bal-stat">
+          <div class="bal-stat-label">Transferred</div>
+          <div class="bal-stat-val" id="balTrans" style="color:var(--blue)">$0.00</div>
+        </div>
+        <div class="bal-stat">
+          <div class="bal-stat-label">Points</div>
+          <div class="bal-stat-val" id="balPts" style="color:var(--gold)">120</div>
+        </div>
+      </div>
+      <div class="balance-chips">
+        <div class="chip"><div class="chip-dot" style="background:var(--green)"></div>Savings Active</div>
+        <div class="chip"><div class="chip-dot" style="background:var(--gold)"></div>Gold Member</div>
+        <div class="chip"><div class="chip-dot" style="background:var(--blue)"></div>FDIC Insured</div>
+        <div class="chip"><div class="chip-dot" style="background:var(--purple)"></div>2FA On</div>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">
+          <svg width="12" height="12" fill="none" stroke="var(--green)" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          Total Deposited
+        </div>
+        <div class="stat-val" id="statDep" style="color:var(--green)">$0.00</div>
+        <div class="stat-change" style="color:var(--green)">↑ All time deposits</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          <svg width="12" height="12" fill="none" stroke="var(--red)" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+          Total Withdrawn
+        </div>
+        <div class="stat-val" id="statWith" style="color:var(--red)">$0.00</div>
+        <div class="stat-change" style="color:var(--red)">↓ All time withdrawals</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          <svg width="12" height="12" fill="none" stroke="var(--blue)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          Transferred Out
+        </div>
+        <div class="stat-val" id="statTrans" style="color:var(--blue)">$0.00</div>
+        <div class="stat-change" style="color:var(--blue)">→ Total sent</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <div class="qa-btn" onclick="showPage('transactions');setTimeout(()=>document.getElementById('depAmt').focus(),200)">
+        <div class="qa-icon" style="background:rgba(22,163,74,0.14)"><svg width="18" height="18" fill="none" stroke="#4ade80" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></div>
+        <div class="qa-label">Deposit</div>
+      </div>
+      <div class="qa-btn" onclick="showPage('transactions');setTimeout(()=>document.getElementById('witAmt').focus(),200)">
+        <div class="qa-icon" style="background:rgba(239,68,68,0.14)"><svg width="18" height="18" fill="none" stroke="#f87171" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></div>
+        <div class="qa-label">Withdraw</div>
+      </div>
+      <div class="qa-btn" onclick="showPage('transfer')">
+        <div class="qa-icon" style="background:rgba(59,130,246,0.14)"><svg width="18" height="18" fill="none" stroke="#93c5fd" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></div>
+        <div class="qa-label">Transfer</div>
+      </div>
+      <div class="qa-btn" onclick="showPage('bills')">
+        <div class="qa-icon" style="background:rgba(168,85,247,0.14)"><svg width="18" height="18" fill="none" stroke="#d8b4fe" stroke-width="2.5" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+        <div class="qa-label">Pay Bills</div>
+      </div>
+      <div class="qa-btn" onclick="showPage('rewards')">
+        <div class="qa-icon" style="background:rgba(201,168,76,0.14)"><svg width="18" height="18" fill="none" stroke="var(--gold)" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+        <div class="qa-label">Rewards</div>
+      </div>
+    </div>
+
+    <!-- 2-col: Recent TX + Spending -->
+    <div class="row2" style="margin-bottom:20px;">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:#fff;">Recent Activity</div>
+          <div style="font-size:0.78rem;color:var(--gold);cursor:pointer;" onclick="showPage('transactions')">View all →</div>
+        </div>
+        <div class="tx-list" id="recentTxList"><div class="empty">No transactions yet. Make your first deposit!</div></div>
+      </div>
+      <div class="card">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:#fff;margin-bottom:4px;">Monthly Spending</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:4px;">Last 7 months activity</div>
+        <div class="spending-chart-wrap" id="spendChart"></div>
+        <div class="insight-row">
+          <div class="insight-card">
+            <div class="insight-icon">📈</div>
+            <div class="insight-val" id="iSaved">$0</div>
+            <div class="insight-label">Net Saved</div>
+          </div>
+          <div class="insight-card">
+            <div class="insight-icon">🔄</div>
+            <div class="insight-val" id="iTxCount">0</div>
+            <div class="insight-label">Transactions</div>
+          </div>
+          <div class="insight-card">
+            <div class="insight-icon">⭐</div>
+            <div class="insight-val" id="iPoints">120</div>
+            <div class="insight-label">Points</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bills alert -->
+    <div class="card card-gold" id="billAlert" style="display:flex;align-items:center;gap:16px;">
+      <div style="font-size:1.6rem;">⚠️</div>
+      <div style="flex:1;">
+        <div style="font-size:0.88rem;font-weight:600;color:#fff;">Bills Due Soon</div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-top:3px;" id="billAlertText">You have 3 bills due this week totaling $885.00</div>
+      </div>
+      <button class="btn-primary" onclick="showPage('bills')" style="white-space:nowrap;font-size:0.82rem;padding:9px 18px;">Pay Now</button>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: TRANSACTIONS ══ -->
+  <div class="page" id="page-transactions">
+    <h2 class="section-title">Transactions</h2>
+    <p class="section-sub">Deposit, withdraw, and view your full transaction history</p>
+    <div class="row2" style="margin-bottom:22px;">
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <div style="width:34px;height:34px;border-radius:9px;background:rgba(22,163,74,0.15);display:flex;align-items:center;justify-content:center;">
+            <svg width="15" height="15" fill="none" stroke="#4ade80" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          </div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:#fff;">Deposit Funds</div>
+        </div>
+        <div class="field"><label class="form-label">Amount ($)</label><input class="form-input" id="depAmt" type="number" min="1" placeholder="0.00"/></div>
+        <div class="field"><label class="form-label">Note (optional)</label><input class="form-input" id="depNote" type="text" placeholder="e.g. Monthly savings deposit"/></div>
+        <button class="btn-primary btn-green btn-full" id="btnDeposit">+ DEPOSIT FUNDS</button>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <div style="width:34px;height:34px;border-radius:9px;background:rgba(239,68,68,0.15);display:flex;align-items:center;justify-content:center;">
+            <svg width="15" height="15" fill="none" stroke="#f87171" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+          </div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:#fff;">Withdraw Funds</div>
+        </div>
+        <div class="field"><label class="form-label">Amount ($)</label><input class="form-input" id="witAmt" type="number" min="1" placeholder="0.00"/></div>
+        <div class="field"><label class="form-label">Note (optional)</label><input class="form-input" id="witNote" type="text" placeholder="e.g. Rent payment"/></div>
+        <button class="btn-primary btn-red btn-full" id="btnWithdraw">− WITHDRAW FUNDS</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:#fff;">Transaction History</div>
+        <div style="font-size:0.78rem;color:var(--muted);" id="txCount">0 records</div>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-chip active" onclick="filterTx('all',this)">All</button>
+        <button class="filter-chip" onclick="filterTx('deposit',this)">Deposits</button>
+        <button class="filter-chip" onclick="filterTx('withdraw',this)">Withdrawals</button>
+        <button class="filter-chip" onclick="filterTx('transfer',this)">Transfers</button>
+        <button class="filter-chip" onclick="filterTx('bill',this)">Bills</button>
+        <button class="filter-chip" onclick="filterTx('bonus',this)">Bonuses</button>
+        <input class="search-input" placeholder="🔍 Search transactions…" oninput="searchTx(this.value)"/>
+      </div>
+      <div class="tx-list" id="allTxList"><div class="empty">No transactions yet.</div></div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: ACCOUNTS ══ -->
+  <div class="page" id="page-accounts">
+    <h2 class="section-title">My Accounts</h2>
+    <p class="section-sub">Manage your bank accounts and view your credit score</p>
+    <div class="row2" style="margin-bottom:20px;">
+      <div>
+        <div class="bank-card" style="margin-bottom:16px;">
+          <div>
+            <div class="bank-card-logo">TS <span>Bank</span></div>
+            <div class="chip-icon" style="margin-top:14px;"></div>
+          </div>
+          <div>
+            <div class="bank-card-number">•••• •••• •••• 4821</div>
+            <div class="bank-card-footer">
+              <div>
+                <div class="bank-card-name" id="cardHolderName">ADMIN USER</div>
+              </div>
+              <div style="text-align:right;">
+                <div class="bank-card-expiry-label">Expires</div>
+                <div class="bank-card-expiry">03/28</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:#fff;margin-bottom:14px;">Account Details</div>
+          <div style="display:flex;flex-direction:column;gap:11px;">
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);font-size:0.84rem;">Account Type</span><span style="font-size:0.84rem;">Premium Checking</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);font-size:0.84rem;">Routing Number</span><span style="font-family:'JetBrains Mono',monospace;font-size:0.84rem;">021000021</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);font-size:0.84rem;">Account Number</span><span style="font-family:'JetBrains Mono',monospace;font-size:0.84rem;">••••••4821</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);font-size:0.84rem;">Member Since</span><span style="font-size:0.84rem;">January 2022</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);font-size:0.84rem;">FDIC Insured</span><span style="color:var(--green);font-size:0.84rem;">✓ Up to $250,000</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);font-size:0.84rem;">Interest Rate</span><span style="color:var(--gold);font-size:0.84rem;">4.75% APY</span></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:#fff;margin-bottom:16px;">Credit Score</div>
+          <div style="display:flex;align-items:center;gap:20px;">
+            <div class="score-ring-wrap">
+              <svg width="100" height="100" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+                <circle id="scoreCircle" cx="50" cy="50" r="42" fill="none" stroke="var(--gold)" stroke-width="8" stroke-linecap="round" stroke-dasharray="263.89" stroke-dashoffset="52.78"/>
+              </svg>
+              <div class="score-center">
+                <div class="score-num">752</div>
+                <div class="score-label">FICO</div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:1.2rem;font-weight:600;color:var(--gold);margin-bottom:4px;">Very Good</div>
+              <div style="font-size:0.8rem;color:var(--muted);margin-bottom:10px;">Top 30% of consumers</div>
+              <div class="progress-bar" style="width:180px;"><div class="progress-fill" style="width:75%"></div></div>
+              <div style="display:flex;justify-content:space-between;width:180px;margin-top:4px;">
+                <span style="font-size:0.66rem;color:var(--muted);">300</span>
+                <span style="font-size:0.66rem;color:var(--muted);">850</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;">
+            <div style="background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.15);border-radius:9px;padding:11px;"><div style="font-size:0.7rem;color:var(--muted);">Payment History</div><div style="font-size:0.9rem;color:var(--green);font-weight:600;margin-top:2px;">Excellent</div></div>
+            <div style="background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.15);border-radius:9px;padding:11px;"><div style="font-size:0.7rem;color:var(--muted);">Credit Util.</div><div style="font-size:0.9rem;color:var(--blue);font-weight:600;margin-top:2px;">14%</div></div>
+          </div>
+        </div>
+        <div class="card card-gold">
+          <div style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">Account Perks</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;align-items:center;gap:10px;font-size:0.84rem;"><span>💳</span><span>No monthly fees on Gold tier</span></div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:0.84rem;"><span>💰</span><span>4.75% APY on savings</span></div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:0.84rem;"><span>🌍</span><span>Free international transfers</span></div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:0.84rem;"><span>📱</span><span>Priority 24/7 support</span></div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:0.84rem;"><span>🎁</span><span>2x reward points on all spend</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: TRANSFER ══ -->
+  <div class="page" id="page-transfer">
+    <h2 class="section-title">Transfer Money</h2>
+    <p class="section-sub">Send money instantly to friends, family, or other accounts</p>
+    <div class="row2">
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:#fff;margin-bottom:14px;">Select Recipient</div>
+          <div class="contact-grid" id="contactGrid"></div>
+          <div class="field"><label class="form-label">Or enter account number</label><input class="form-input" id="transAcct" type="text" placeholder="e.g. TS-8821-XXXX"/></div>
+          <div class="field"><label class="form-label">Recipient Name</label><input class="form-input" id="transName" type="text" placeholder="Full name"/></div>
+        </div>
+        <div class="card">
+          <div class="field"><label class="form-label">Amount ($)</label><input class="form-input" id="transAmt" type="number" min="1" placeholder="0.00"/></div>
+          <div class="field"><label class="form-label">Note / Purpose</label><input class="form-input" id="transNote" type="text" placeholder="e.g. Dinner split, rent, etc."/></div>
+          <div class="field">
+            <label class="form-label">Transfer Speed</label>
+            <select class="form-input form-select" id="transSpeed" style="color:#fff;">
+              <option value="instant">⚡ Instant (Free)</option>
+              <option value="standard">📅 Standard 1-3 days (Free)</option>
+              <option value="express">🚀 Express Same Day ($2.99 fee)</option>
+            </select>
+          </div>
+          <button class="btn-primary btn-full" id="btnTransfer">SEND MONEY →</button>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:#fff;margin-bottom:14px;">Recent Transfers</div>
+          <div class="tx-list" id="transferTxList"><div class="empty" style="padding:24px 0;">No transfers yet</div></div>
+        </div>
+        <div class="card card-gold">
+          <div style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">Transfer Limits · Gold Tier</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);font-size:0.83rem;">Daily limit</span><span style="font-family:'JetBrains Mono',monospace;font-size:0.83rem;">$10,000</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);font-size:0.83rem;">Monthly limit</span><span style="font-family:'JetBrains Mono',monospace;font-size:0.83rem;">$50,000</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);font-size:0.83rem;">Per transfer max</span><span style="font-family:'JetBrains Mono',monospace;font-size:0.83rem;">$5,000</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);font-size:0.83rem;">Instant transfers</span><span style="color:var(--green);font-size:0.83rem;">Unlimited</span></div>
+          </div>
+          <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(201,168,76,0.15);">
+            <div style="font-size:0.75rem;color:var(--muted);">Sent today: <span id="sentToday" style="color:#fff;font-family:'JetBrains Mono',monospace;">$0.00</span> of $10,000.00</div>
+            <div class="progress-bar" style="margin-top:8px;"><div class="progress-fill" id="sentBar" style="width:0%;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: BILLS ══ -->
+  <div class="page" id="page-bills">
+    <h2 class="section-title">Pay Bills</h2>
+    <p class="section-sub">Manage and pay all your recurring bills in one place</p>
+    <div class="bill-grid" id="billGrid" style="margin-bottom:22px;"></div>
+    <div class="card">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:#fff;margin-bottom:14px;">Add Custom Bill</div>
+      <div class="row2">
+        <div class="field"><label class="form-label">Bill Name</label><input class="form-input" id="billName" type="text" placeholder="e.g. Internet"/></div>
+        <div class="field"><label class="form-label">Amount ($)</label><input class="form-input" id="billAmt" type="number" placeholder="0.00"/></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label class="form-label">Due Date</label><input class="form-input" id="billDue" type="text" placeholder="e.g. 25th of month"/></div>
+        <div class="field">
+          <label class="form-label">Category</label>
+          <select class="form-input form-select" id="billCat" style="color:#fff;">
+            <option>🏠 Housing</option><option>⚡ Utilities</option>
+            <option>📱 Telecom</option><option>🎬 Entertainment</option>
+            <option>🏥 Health</option><option>📦 Other</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="addCustomBill()">+ ADD BILL</button>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: COUPONS ══ -->
+  <div class="page" id="page-coupons">
+    <h2 class="section-title">Coupons & Promo Codes</h2>
+    <p class="section-sub">Redeem exclusive codes for bonus cash added directly to your balance</p>
+    <div class="card" style="margin-bottom:24px;">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:#fff;margin-bottom:14px;">Redeem a Code</div>
+      <div style="display:flex;gap:10px;">
+        <input class="form-input" id="couponInput" type="text" placeholder="Enter coupon code (e.g. WELCOME100)" style="flex:1;text-transform:uppercase;"/>
+        <button class="btn-primary" onclick="redeemCoupon()" style="white-space:nowrap;">REDEEM →</button>
+      </div>
+      <div style="margin-top:10px;font-size:0.77rem;color:var(--muted);">Available codes: <span style="color:var(--gold);">WELCOME100 · SAVE50 · BONUS25 · TSBANK · SUMMER2025 · NEWUSER200</span></div>
+    </div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:#fff;margin-bottom:14px;">Available Coupons</div>
+    <div class="coupon-grid" id="couponGrid"></div>
+  </div>
+
+  <!-- ══ PAGE: REWARDS ══ -->
+  <div class="page" id="page-rewards">
+    <h2 class="section-title">Rewards & Bonuses</h2>
+    <p class="section-sub">Earn daily bonuses, spin the wheel, and redeem your points for cash</p>
+    <div class="row2">
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:#fff;margin-bottom:4px;">Daily Check-In Streak 🔥</div>
+          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:16px;">Check in every day to earn increasing bonuses</div>
+          <div class="streak-row" id="streakRow"></div>
+          <div style="margin-top:14px;"><button class="btn-primary btn-full" id="btnCheckIn">CLAIM DAILY BONUS</button></div>
+        </div>
+        <div class="card card-gold" style="margin-bottom:16px;">
+          <div style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">Refer a Friend</div>
+          <div style="font-size:0.83rem;color:var(--muted);margin-bottom:12px;">Share your code and earn $25 for every friend who joins!</div>
+          <div style="display:flex;gap:9px;">
+            <input class="form-input" value="TSBANK-REF-4821" readonly style="flex:1;font-family:'JetBrains Mono',monospace;font-size:0.83rem;"/>
+            <button class="btn-ghost" onclick="copyRef()">Copy</button>
+          </div>
+          <div style="margin-top:12px;font-size:0.8rem;color:var(--muted);">This month: <span style="color:var(--gold);font-weight:600;">3 referrals</span> · Earned: <span style="color:var(--gold);font-weight:600;">$75</span></div>
+        </div>
+        <!-- Points Card -->
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:#fff;">Reward Points</div>
+              <div style="font-size:0.78rem;color:var(--muted);margin-top:2px;">500 pts = $5 cash</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:1.8rem;color:var(--gold);" id="pointsBalance">0</div>
+              <div style="font-size:0.72rem;color:var(--muted);">points</div>
+            </div>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="pointsBar" style="width:0%"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--muted);margin-top:5px;">
+            <span>0 pts</span><span id="nextTier">1,000 pts to Gold tier</span>
+          </div>
+          <button class="btn-primary btn-full" style="margin-top:14px;" id="btnRedeemPoints" onclick="redeemPoints()">REDEEM 500 POINTS → $5</button>
+        </div>
+      </div>
+      <!-- Spin Wheel -->
+      <div class="card">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:#fff;margin-bottom:4px;">Lucky Spin 🎰</div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:14px;">Spin once per day for a chance to win up to $500!</div>
+        <div class="spin-wheel-wrap">
+          <div class="spin-pointer-wrap"><div class="spin-pointer">▼</div></div>
+          <div class="spin-canvas-ring">
+            <canvas id="spinCanvas" width="240" height="240" style="cursor:pointer;border-radius:50%;display:block;" onclick="spinWheel()"></canvas>
+          </div>
+          <button class="btn-primary" style="margin-top:18px;" id="btnSpin" onclick="spinWheel()">🎲 SPIN THE WHEEL</button>
+          <div id="spinResult" style="margin-top:12px;font-size:0.9rem;color:var(--gold);text-align:center;min-height:20px;font-weight:500;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: LOANS ══ -->
+  <div class="page" id="page-loans">
+    <h2 class="section-title">Loans & Credit</h2>
+    <p class="section-sub">Apply for personal loans with competitive rates and manage repayments</p>
+    <div class="row2">
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:#fff;margin-bottom:14px;">Apply for a Loan</div>
+          <div class="field"><label class="form-label">Loan Amount ($)</label><input class="form-input" id="loanAmt" type="number" min="100" placeholder="0.00"/></div>
+          <div class="field">
+            <label class="form-label">Duration</label>
+            <select class="form-input form-select" id="loanTerm" style="color:#fff;">
+              <option value="3">3 months — 5% interest</option>
+              <option value="6">6 months — 8% interest</option>
+              <option value="12">12 months — 12% interest</option>
+              <option value="24">24 months — 18% interest</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="form-label">Purpose</label>
+            <select class="form-input form-select" id="loanPurpose" style="color:#fff;">
+              <option>🏠 Home Improvement</option><option>🎓 Education</option>
+              <option>🏥 Medical</option><option>💼 Business</option>
+              <option>🚗 Vehicle</option><option>📦 Other</option>
+            </select>
+          </div>
+          <div class="card card-gold" style="margin-bottom:14px;padding:14px;" id="loanPreview">
+            <div style="font-size:0.68rem;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;">Live Loan Preview</div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:7px;"><span style="font-size:0.8rem;color:var(--muted);">Monthly payment</span><span style="font-family:'JetBrains Mono',monospace;font-size:0.86rem;" id="prevMonthly">—</span></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:7px;"><span style="font-size:0.8rem;color:var(--muted);">Total repayable</span><span style="font-family:'JetBrains Mono',monospace;font-size:0.86rem;" id="prevTotal">—</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="font-size:0.8rem;color:var(--muted);">Interest</span><span style="font-family:'JetBrains Mono',monospace;font-size:0.86rem;color:var(--gold);" id="prevInterest">—</span></div>
+          </div>
+          <button class="btn-primary btn-full" id="btnApplyLoan">APPLY FOR LOAN</button>
+        </div>
+        <div class="card card-gold">
+          <div style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">Eligibility Status</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);font-size:0.83rem;">Pre-approval limit</span><span style="color:var(--green);font-size:0.83rem;font-weight:600;">$10,000</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);font-size:0.83rem;">Credit score</span><span style="color:var(--gold);font-size:0.83rem;">752 (Very Good)</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);font-size:0.83rem;">Min. rate available</span><span style="font-size:0.83rem;">5.00%</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);font-size:0.83rem;">Status</span><span style="color:var(--green);font-size:0.83rem;">✓ Pre-Approved</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:#fff;margin-bottom:14px;">Your Loans</div>
+        <div id="loansList"><div class="empty" style="padding:24px 0;">No active loans</div></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ══════════════════════════════════════════════════
+//  BOOTSTRAP
+// ══════════════════════════════════════════════════
+const user = sessionStorage.getItem('tsbank_user');
+if (!user) location.href = 'index.html';
+
+// Date display
+const now_d = new Date();
+document.getElementById('topbarDate').textContent =
+  now_d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+const hr = now_d.getHours();
+const greet = hr < 12 ? 'Good Morning' : hr < 18 ? 'Good Afternoon' : 'Good Evening';
+document.getElementById('greetTitle').textContent = greet + ' ✦';
+
+// Card holder name
+document.getElementById('cardHolderName').textContent = user.toUpperCase() + ' USER';
+document.getElementById('sbName').textContent = user;
+document.getElementById('sbAvatar').textContent = user[0].toUpperCase();
+
+// ══════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════
+const S = {
+  balance: 1200, totalDep: 0, totalWith: 0, totalTrans: 0,
+  points: 120, streak: 0, lastCheckin: null, lastSpin: null,
+  transactions: [], loans: [], usedCoupons: [],
+  bills: [
+    {id:1,name:'Electricity',icon:'⚡',amt:85.00,due:'18th',cat:'Utilities',status:'due',paid:false},
+    {id:2,name:'Internet',icon:'📡',amt:49.99,due:'22nd',cat:'Telecom',status:'due',paid:false},
+    {id:3,name:'Netflix',icon:'🎬',amt:15.99,due:'28th',cat:'Entertainment',status:'upcoming',paid:false},
+    {id:4,name:'Rent',icon:'🏠',amt:750.00,due:'1st',cat:'Housing',status:'overdue',paid:false},
+    {id:5,name:'Gym',icon:'💪',amt:29.99,due:'5th',cat:'Health',status:'upcoming',paid:false},
+    {id:6,name:'Phone Plan',icon:'📱',amt:35.00,due:'10th',cat:'Telecom',status:'paid',paid:true},
+  ]
+};
+
+const CONTACTS = [
+  {name:'Alice K.',avatar:'AK',color:'#7c3aed'},
+  {name:'Bob M.',avatar:'BM',color:'#0891b2'},
+  {name:'Clara T.',avatar:'CT',color:'#be185d'},
+  {name:'Dave R.',avatar:'DR',color:'#047857'},
+];
+const COUPONS = [
+  {code:'WELCOME100',desc:'Welcome bonus for new users',amt:100,cat:'Welcome'},
+  {code:'SAVE50',desc:'General savings coupon',amt:50,cat:'Savings'},
+  {code:'BONUS25',desc:'Small bonus reward',amt:25,cat:'Bonus'},
+  {code:'TSBANK',desc:'Official TS Bank promo',amt:75,cat:'Promo'},
+  {code:'SUMMER2025',desc:'Summer 2025 campaign',amt:150,cat:'Seasonal'},
+  {code:'NEWUSER200',desc:'New user special reward',amt:200,cat:'Welcome'},
+];
+const SPIN_PRIZES = [
+  {label:'$5',val:5,color:'#1e3a5f'},{label:'$10',val:10,color:'#1e4a2f'},
+  {label:'$25',val:25,color:'#3a1e5f'},{label:'$50',val:50,color:'#5f1e1e'},
+  {label:'$100',val:100,color:'#5f4a1e'},{label:'💀 $0',val:0,color:'#1e1e1e'},
+  {label:'$500',val:500,color:'#5f3a1e'},{label:'$15',val:15,color:'#1e3a4f'},
+];
+const STREAK_REWARDS = [5,10,15,20,25,50,100];
+
+// ── Utilities ──
+function fmt(n){return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function nowStr(){return new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}
+function uid(){return '#'+Math.random().toString(36).substr(2,8).toUpperCase();}
+function todayStr(){return new Date().toISOString().split('T')[0];}
+
+function toast(msg,type='s'){
+  const t=document.getElementById('toast');
+  t.innerHTML='<span>'+msg+'</span>';
+  t.className='toast '+type;
+  void t.offsetWidth;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+function numPop(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.classList.remove('num-pop');
+  void el.offsetWidth;
+  el.classList.add('num-pop');
+}
+
+// ── Update all UI ──
+function updateAllUI(){
+  ['heroBalance','topbarBal'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.textContent=(id==='topbarBal'?'$':'')+fmt(S.balance);
+  });
+  document.getElementById('statDep').textContent='$'+fmt(S.totalDep);
+  document.getElementById('statWith').textContent='$'+fmt(S.totalWith);
+  document.getElementById('statTrans').textContent='$'+fmt(S.totalTrans);
+  document.getElementById('balDep').textContent='$'+fmt(S.totalDep);
+  document.getElementById('balWith').textContent='$'+fmt(S.totalWith);
+  document.getElementById('balTrans').textContent='$'+fmt(S.totalTrans);
+  document.getElementById('balPts').textContent=S.points.toLocaleString();
+  document.getElementById('pointsBalance').textContent=S.points.toLocaleString();
+  document.getElementById('iPoints').textContent=S.points.toLocaleString();
+  document.getElementById('iTxCount').textContent=S.transactions.length;
+  const net=S.totalDep-S.totalWith-S.totalTrans;
+  document.getElementById('iSaved').textContent='$'+fmt(Math.max(0,net));
+  const pct=Math.min((S.points/1000)*100,100);
+  document.getElementById('pointsBar').style.width=pct+'%';
+  document.getElementById('nextTier').textContent=S.points>=1000?'🏆 Gold tier reached!':((1000-S.points)+' pts to Gold tier');
+  // Sent today bar
+  const sentPct=Math.min((S.totalTrans/10000)*100,100);
+  const sb=document.getElementById('sentBar');
+  if(sb)sb.style.width=sentPct+'%';
+  const st=document.getElementById('sentToday');
+  if(st)st.textContent='$'+fmt(S.totalTrans);
+  numPop('heroBalance');
+  renderSpendChart();
+}
+
+// ── Spending Chart ──
+const MONTHS=['Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+function renderSpendChart(){
+  const el=document.getElementById('spendChart');
+  if(!el)return;
+  const vals=[420,680,510,390,720,480,S.totalWith+S.totalTrans];
+  const max=Math.max(...vals,1);
+  el.innerHTML=vals.map((v,i)=>`
+    <div class="bar-wrap">
+      <div class="bar${i===6?' current':''}" style="height:${Math.max(8,(v/max)*70)}px;" title="${MONTHS[i]}: $${fmt(v)}"></div>
+      <div class="bar-label">${MONTHS[i]}</div>
+    </div>`).join('');
+}
+
+// ── Add Transaction ──
+function addTx(type,amt,label,cat,note=''){
+  S.transactions.unshift({id:uid(),type,amt,label,cat,note,date:nowStr()});
+  S.points+=Math.floor(amt/10);
+  renderTxLists();
+  updateAllUI();
+}
+
+// ══════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════
+const PAGE_TITLES={
+  dashboard:'Dashboard',transactions:'Transactions',accounts:'My Accounts',
+  transfer:'Transfer',bills:'Pay Bills',coupons:'Coupons',rewards:'Rewards',loans:'Loans & Credit'
+};
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const el=document.getElementById('page-'+id);
+  if(el)el.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+id+"'"))n.classList.add('active');
+  });
+  document.getElementById('topbarTitle').textContent=PAGE_TITLES[id]||id;
+  if(id==='rewards')drawSpinWheel();
+}
+
+// ══════════════════════════════════════════════════
+//  NOTIFICATIONS
+// ══════════════════════════════════════════════════
+function toggleNotif(){
+  document.getElementById('notifPanel').classList.toggle('open');
+}
+function clearNotifs(){
+  document.getElementById('notifList').innerHTML='<div style="padding:18px;text-align:center;color:var(--muted);font-size:0.84rem;">No new notifications</div>';
+  document.getElementById('notifDot').style.display='none';
+  document.getElementById('notifPanel').classList.remove('open');
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#notifPanel')&&!e.target.closest('.notif-btn'))
+    document.getElementById('notifPanel').classList.remove('open');
+});
+
+// ══════════════════════════════════════════════════
+//  DEPOSIT / WITHDRAW
+// ══════════════════════════════════════════════════
+document.getElementById('btnDeposit').onclick=function(){
+  const amt=parseFloat(document.getElementById('depAmt').value);
+  const note=document.getElementById('depNote').value.trim();
+  if(!amt||amt<=0){toast('Enter a valid amount','e');return;}
+  if(amt>100000){toast('Maximum single deposit is $100,000','e');return;}
+  S.balance+=amt;S.totalDep+=amt;
+  addTx('deposit',amt,'Deposit','💰 Deposit',note||'Manual deposit');
+  toast('✓ $'+fmt(amt)+' deposited successfully!','s');
+  document.getElementById('depAmt').value='';
+  document.getElementById('depNote').value='';
+};
+document.getElementById('btnWithdraw').onclick=function(){
+  const amt=parseFloat(document.getElementById('witAmt').value);
+  const note=document.getElementById('witNote').value.trim();
+  if(!amt||amt<=0){toast('Enter a valid amount','e');return;}
+  if(amt>S.balance){toast('⚠ Insufficient funds! Balance: $'+fmt(S.balance),'e');return;}
+  S.balance-=amt;S.totalWith+=amt;
+  addTx('withdraw',amt,'Withdrawal','💸 Withdrawal',note||'Manual withdrawal');
+  toast('✓ $'+fmt(amt)+' withdrawn successfully!','s');
+  document.getElementById('witAmt').value='';
+  document.getElementById('witNote').value='';
+};
+document.getElementById('depAmt').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btnDeposit').click();});
+document.getElementById('witAmt').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btnWithdraw').click();});
+
+// ══════════════════════════════════════════════════
+//  TRANSACTION RENDER
+// ══════════════════════════════════════════════════
+const TX_ICONS={deposit:'💰',withdraw:'💸',transfer:'🔄',bill:'🧾',bonus:'🎁',spin:'🎰',coupon:'🏷️',loan:'💼',repay:'✅'};
+const TX_COLORS={deposit:'rgba(22,163,74,.13)',withdraw:'rgba(239,68,68,.13)',transfer:'rgba(59,130,246,.13)',bill:'rgba(168,85,247,.13)',bonus:'rgba(201,168,76,.13)',spin:'rgba(201,168,76,.13)',coupon:'rgba(201,168,76,.13)',loan:'rgba(59,130,246,.13)',repay:'rgba(22,163,74,.13)'};
+const TX_POS=['deposit','bonus','spin','coupon','loan'];
+
+function renderOneTx(tx){
+  const isPos=TX_POS.includes(tx.type);
+  return`<div class="tx-item">
+  <div class="tx-ico" style="background:${TX_COLORS[tx.type]||'rgba(255,255,255,.07)'}">${TX_ICONS[tx.type]||'💳'}</div>
+  <div class="tx-info">
+    <div class="tx-name">${tx.label}</div>
+    <div class="tx-date">${tx.date}</div>
+    ${tx.note?`<div class="tx-cat">${tx.note}</div>`:''}
+  </div>
+  <div style="text-align:right;">
+    <div class="tx-amt ${isPos?'pos':'neg'}">${isPos?'+':'-'}$${fmt(tx.amt)}</div>
+    <div class="tx-status">${tx.id}</div>
+  </div>
+</div>`;
+}
+
+let txFilter='all',txSearch='';
+function renderTxLists(){
+  const recent=S.transactions.slice(0,5);
+  document.getElementById('recentTxList').innerHTML=recent.length?recent.map(renderOneTx).join(''):'<div class="empty">No transactions yet. Make your first deposit!</div>';
+  let filtered=S.transactions.filter(tx=>{
+    if(txFilter!=='all'&&tx.type!==txFilter)return false;
+    if(txSearch&&!tx.label.toLowerCase().includes(txSearch)&&!tx.note.toLowerCase().includes(txSearch))return false;
+    return true;
+  });
+  document.getElementById('allTxList').innerHTML=filtered.length?filtered.map(renderOneTx).join(''):'<div class="empty">No transactions found</div>';
+  const cnt=document.getElementById('txCount');
+  if(cnt)cnt.textContent=S.transactions.length+' records';
+  const transfers=S.transactions.filter(t=>t.type==='transfer').slice(0,5);
+  document.getElementById('transferTxList').innerHTML=transfers.length?transfers.map(renderOneTx).join(''):'<div class="empty" style="padding:24px 0;">No transfers yet</div>';
+}
+function filterTx(f,el){
+  txFilter=f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderTxLists();
+}
+function searchTx(v){txSearch=v.toLowerCase();renderTxLists();}
+
+// ══════════════════════════════════════════════════
+//  TRANSFER
+// ══════════════════════════════════════════════════
+let selectedContact=null;
+function renderContacts(){
+  document.getElementById('contactGrid').innerHTML=CONTACTS.map((c,i)=>`
+    <div class="contact-chip" onclick="selectContact(${i})" id="contact-${i}">
+      <div class="contact-av" style="background:${c.color};">${c.avatar}</div>
+      <div class="contact-name">${c.name}</div>
+    </div>`).join('');
+}
+function selectContact(i){
+  selectedContact=i;
+  document.querySelectorAll('.contact-chip').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('contact-'+i).classList.add('selected');
+  document.getElementById('transName').value=CONTACTS[i].name;
+  document.getElementById('transAcct').value='TS-882'+i+'-XXXX';
+}
+renderContacts();
+
+document.getElementById('btnTransfer').onclick=function(){
+  const amt=parseFloat(document.getElementById('transAmt').value);
+  const name=document.getElementById('transName').value.trim();
+  const note=document.getElementById('transNote').value.trim();
+  const speed=document.getElementById('transSpeed').value;
+  if(!amt||amt<=0){toast('Enter a valid amount','e');return;}
+  if(!name){toast('Enter recipient name','e');return;}
+  if(amt>S.balance){toast('⚠ Insufficient funds!','e');return;}
+  if(amt>5000){toast('⚠ Per-transfer limit is $5,000','e');return;}
+  let fee=speed==='express'?2.99:0;
+  if(fee>0&&S.balance<amt+fee){toast('⚠ Insufficient funds including fee!','e');return;}
+  openModal('Confirm Transfer',`
+    <div>
+      <div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:var(--muted);font-size:.83rem">To</span><strong>${name}</strong></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:var(--muted);font-size:.83rem">Amount</span><strong style="color:var(--gold);">$${fmt(amt)}</strong></div>
+        ${fee>0?`<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:var(--muted);font-size:.83rem">Express fee</span><strong style="color:var(--red);">$${fmt(fee)}</strong></div>`:''}
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:var(--muted);font-size:.83rem">Speed</span><strong>${speed}</strong></div>
+        ${note?`<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);font-size:.83rem">Note</span><strong>${note}</strong></div>`:''}
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-primary btn-full" onclick="confirmTransfer(${amt},'${name}','${note}',${fee})">CONFIRM SEND</button>
+        <button class="btn-ghost btn-full" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>`);
+};
+function confirmTransfer(amt,name,note,fee){
+  S.balance-=(amt+fee);S.totalTrans+=amt;
+  addTx('transfer',amt,'Transfer to '+name,'🔄 Transfer',note||'Bank transfer');
+  if(fee>0)addTx('bill',fee,'Express Fee','💳 Fee','Wire fee');
+  toast('✓ $'+fmt(amt)+' sent to '+name+'!','s');
+  closeModal();selectedContact=null;
+  document.querySelectorAll('.contact-chip').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('transAmt').value='';
+  document.getElementById('transName').value='';
+  document.getElementById('transNote').value='';
+}
+
+// ══════════════════════════════════════════════════
+//  BILLS
+// ══════════════════════════════════════════════════
+function renderBills(){
+  document.getElementById('billGrid').innerHTML=S.bills.map(b=>`
+    <div class="bill-card${b.status==='overdue'?' overdue':''}" onclick="payBill(${b.id})">
+      <div class="bill-status ${b.status==='paid'?'bs-paid':b.status==='overdue'?'bs-due':b.status==='due'?'bs-due':'bs-upcoming'}">${b.status==='paid'?'✓ Paid':b.status==='overdue'?'Overdue':b.status==='due'?'Due':'Upcoming'}</div>
+      <div class="bill-icon" style="background:rgba(255,255,255,.05);">${b.icon}</div>
+      <div class="bill-name">${b.name}</div>
+      <div class="bill-due">Due: ${b.due} of month · ${b.cat}</div>
+      <div class="bill-amt">$${fmt(b.amt)}</div>
+    </div>`).join('');
+  // update badge
+  const due=S.bills.filter(b=>!b.paid&&b.status!=='upcoming').length;
+  document.getElementById('billsBadge').textContent=due;
+  document.getElementById('billsBadge').style.display=due?'':'none';
+}
+function payBill(id){
+  const b=S.bills.find(x=>x.id===id);
+  if(!b)return;
+  if(b.paid){toast('Bill already paid','w');return;}
+  if(b.amt>S.balance){toast('⚠ Insufficient balance!','e');return;}
+  openModal('Pay Bill',`
+    <div>
+      <div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:var(--muted);font-size:.83rem">Bill</span><strong>${b.icon} ${b.name}</strong></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:var(--muted);font-size:.83rem">Amount</span><strong style="color:var(--gold);">$${fmt(b.amt)}</strong></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);font-size:.83rem">Category</span><strong>${b.cat}</strong></div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-primary btn-full" onclick="confirmBill(${id})">PAY NOW</button>
+        <button class="btn-ghost btn-full" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>`);
+}
+function confirmBill(id){
+  const b=S.bills.find(x=>x.id===id);
+  if(!b)return;
+  S.balance-=b.amt;S.totalWith+=b.amt;
+  b.paid=true;b.status='paid';
+  addTx('bill',b.amt,'Bill: '+b.name,'🧾 Bill',b.cat);
+  toast('✓ '+b.name+' bill paid — $'+fmt(b.amt),'s');
+  renderBills();closeModal();updateAllUI();
+}
+function addCustomBill(){
+  const name=document.getElementById('billName').value.trim();
+  const amt=parseFloat(document.getElementById('billAmt').value);
+  const due=document.getElementById('billDue').value.trim();
+  const cat=document.getElementById('billCat').value;
+  if(!name||!amt||amt<=0){toast('Fill in bill name and amount','e');return;}
+  const emoji=cat.split(' ')[0];
+  S.bills.push({id:Date.now(),name,icon:emoji,amt,due:due||'Monthly',cat:cat.split(' ').slice(1).join(' '),status:'upcoming',paid:false});
+  renderBills();
+  toast('✓ '+name+' bill added!','s');
+  document.getElementById('billName').value='';
+  document.getElementById('billAmt').value='';
+  document.getElementById('billDue').value='';
+}
+renderBills();
+
+// ══════════════════════════════════════════════════
+//  COUPONS
+// ══════════════════════════════════════════════════
+function renderCoupons(){
+  document.getElementById('couponGrid').innerHTML=COUPONS.map(c=>{
+    const used=S.usedCoupons.includes(c.code);
+    return`<div class="coupon-card${used?' used':''}">
+      <div class="coupon-circle-l"></div><div class="coupon-circle-r"></div>
+      ${used?'<div class="coupon-used-badge">✓ Redeemed</div>':''}
+      <div class="coupon-tag">${c.cat}</div>
+      <div class="coupon-code">${c.code}</div>
+      <div class="coupon-desc">${c.desc}</div>
+      <div class="coupon-amt">+$${c.amt}</div>
+      ${!used?`<button class="btn-primary" style="margin-top:12px;width:100%;padding:9px;font-size:.8rem;" onclick="applyCode('${c.code}')">REDEEM</button>`:'<div style="margin-top:12px;font-size:.76rem;color:var(--muted);text-align:center;">Already redeemed</div>'}
+    </div>`;
+  }).join('');
+}
+function applyCode(code){
+  const c=COUPONS.find(x=>x.code===code.toUpperCase().trim());
+  if(!c){toast('⚠ Invalid coupon code','e');return;}
+  if(S.usedCoupons.includes(c.code)){toast('⚠ Coupon already redeemed','w');return;}
+  S.usedCoupons.push(c.code);S.balance+=c.amt;
+  addTx('coupon',c.amt,'Coupon: '+c.code,'🏷️ Coupon','Code redeemed');
+  toast('🎉 +$'+c.amt+' added! Code '+c.code+' redeemed!','s');
+  renderCoupons();updateAllUI();
+  document.getElementById('couponInput').value='';
+}
+function redeemCoupon(){applyCode(document.getElementById('couponInput').value);}
+document.getElementById('couponInput').addEventListener('keydown',e=>{if(e.key==='Enter')redeemCoupon();});
+renderCoupons();
+
+// ══════════════════════════════════════════════════
+//  REWARDS — STREAK
+// ══════════════════════════════════════════════════
+function renderStreak(){
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const today=new Date().getDay();
+  const todayIdx=today===0?6:today-1;
+  document.getElementById('streakRow').innerHTML=days.map((d,i)=>{
+    const done=i<S.streak%7;const isToday=i===todayIdx;
+    return`<div class="streak-day${done?' done':''}${isToday?' today':''}">
+      <div class="day-name">${d}</div>
+      <div class="day-amt">$${STREAK_REWARDS[i]}</div>
+      <div class="day-check">${done?'✓':isToday?'→':'○'}</div>
+    </div>`;
+  }).join('');
+  const claimed=S.lastCheckin===todayStr();
+  const btn=document.getElementById('btnCheckIn');
+  btn.textContent=claimed?'✓ Claimed Today':'CLAIM DAILY BONUS';
+  btn.disabled=claimed;btn.style.opacity=claimed?'0.5':'1';
+}
+document.getElementById('btnCheckIn').onclick=function(){
+  if(S.lastCheckin===todayStr()){toast('Already claimed! Come back tomorrow.','w');return;}
+  const reward=STREAK_REWARDS[S.streak%7];
+  S.balance+=reward;S.streak++;S.lastCheckin=todayStr();
+  addTx('bonus',reward,'Daily Check-in Bonus','🎁 Reward','Streak day '+S.streak);
+  toast('🔥 Streak Day '+S.streak+'! +$'+reward+' bonus!','s');
+  renderStreak();updateAllUI();
+  document.getElementById('rewardsBadge').style.display='none';
+};
+renderStreak();
+
+// ══════════════════════════════════════════════════
+//  REWARDS — SPIN WHEEL
+// ══════════════════════════════════════════════════
+let spinning=false,spinAngle=0;
+function drawSpinWheel(rotation=0){
+  const canvas=document.getElementById('spinCanvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const cx=120,cy=120,r=110,n=SPIN_PRIZES.length,arc=(2*Math.PI)/n;
+  ctx.clearRect(0,0,240,240);
+  SPIN_PRIZES.forEach((p,i)=>{
+    const start=rotation+i*arc-Math.PI/2;
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,start,start+arc);
+    ctx.fillStyle=p.color;ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(start+arc/2);
+    ctx.textAlign='right';ctx.fillStyle='#fff';
+    ctx.font='bold 12px JetBrains Mono,monospace';
+    ctx.fillText(p.label,r-14,4);ctx.restore();
+  });
+  // Center circle
+  ctx.beginPath();ctx.arc(cx,cy,20,0,2*Math.PI);
+  ctx.fillStyle='#0a0b12';ctx.fill();
+  ctx.strokeStyle='rgba(201,168,76,0.4)';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='rgba(201,168,76,0.7)';ctx.font='bold 9px DM Sans,sans-serif';
+  ctx.textAlign='center';ctx.fillText('SPIN',cx,cy+3);
+}
+function spinWheel(){
+  if(spinning){return;}
+  if(S.lastSpin===todayStr()){toast('🎰 Already spun today! Come back tomorrow.','w');return;}
+  spinning=true;
+  document.getElementById('btnSpin').disabled=true;
+  document.getElementById('spinResult').textContent='Spinning...';
+  const extra=Math.PI*2*(5+Math.floor(Math.random()*5));
+  const prizeIdx=Math.floor(Math.random()*SPIN_PRIZES.length);
+  const prizeAngle=Math.PI*2-prizeIdx*((Math.PI*2)/SPIN_PRIZES.length);
+  const target=extra+prizeAngle;
+  const duration=4000;const start=performance.now();const startAngle=spinAngle;
+  function animate(ts){
+    const elapsed=ts-start;const progress=Math.min(elapsed/duration,1);
+    const ease=1-Math.pow(1-progress,4);
+    spinAngle=startAngle+target*ease;drawSpinWheel(spinAngle);
+    if(progress<1){requestAnimationFrame(animate);}
+    else{
+      spinning=false;const prize=SPIN_PRIZES[prizeIdx];S.lastSpin=todayStr();
+      document.getElementById('btnSpin').disabled=false;
+      if(prize.val>0){
+        S.balance+=prize.val;
+        addTx('spin',prize.val,'Spin Wheel Win 🎰','🎰 Spin','Lucky spin prize');
+        document.getElementById('spinResult').textContent='🎉 You won $'+prize.val+'!';
+        toast('🎰 Lucky! You won $'+prize.val+' from the spin!','s');
+      }else{
+        document.getElementById('spinResult').textContent='😢 Better luck next time!';
+        toast('💀 No luck this time. Try again tomorrow!','w');
+      }
+      updateAllUI();
+    }
+  }
+  requestAnimationFrame(animate);
+}
+drawSpinWheel();
+
+// ══════════════════════════════════════════════════
+//  POINTS REDEEM
+// ══════════════════════════════════════════════════
+function redeemPoints(){
+  if(S.points<500){toast('You need at least 500 points to redeem','e');return;}
+  S.points-=500;S.balance+=5;
+  addTx('bonus',5,'Points Redeemed (500 pts)','🎁 Reward','Points → Cash');
+  toast('✓ 500 points redeemed for $5!','s');
+  updateAllUI();
+}
+function copyRef(){
+  navigator.clipboard.writeText('TSBANK-REF-4821').catch(()=>{});
+  toast('✓ Referral code copied!','i');
+}
+
+// ══════════════════════════════════════════════════
+//  LOANS
+// ══════════════════════════════════════════════════
+const RATES={3:0.05,6:0.08,12:0.12,24:0.18};
+function calcLoan(amt,term){
+  const rate=RATES[term]||0.08;const total=amt*(1+rate);
+  const monthly=total/term;const interest=total-amt;
+  return{monthly,total,interest};
+}
+document.getElementById('loanAmt').oninput=previewLoan;
+document.getElementById('loanTerm').onchange=previewLoan;
+function previewLoan(){
+  const amt=parseFloat(document.getElementById('loanAmt').value);
+  const term=parseInt(document.getElementById('loanTerm').value);
+  if(!amt||amt<=0){
+    document.getElementById('prevMonthly').textContent='—';
+    document.getElementById('prevTotal').textContent='—';
+    document.getElementById('prevInterest').textContent='—';
+    return;
+  }
+  const{monthly,total,interest}=calcLoan(amt,term);
+  document.getElementById('prevMonthly').textContent='$'+fmt(monthly);
+  document.getElementById('prevTotal').textContent='$'+fmt(total);
+  document.getElementById('prevInterest').textContent='$'+fmt(interest);
+}
+document.getElementById('btnApplyLoan').onclick=function(){
+  const amt=parseFloat(document.getElementById('loanAmt').value);
+  const term=parseInt(document.getElementById('loanTerm').value);
+  const purpose=document.getElementById('loanPurpose').value;
+  if(!amt||amt<100){toast('Minimum loan amount is $100','e');return;}
+  if(amt>10000){toast('Maximum loan amount is $10,000','e');return;}
+  const{monthly,total,interest}=calcLoan(amt,term);
+  openModal('Confirm Loan Application',`
+    <div>
+      <div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:var(--muted);font-size:.83rem">Loan Amount</span><strong style="color:var(--gold);">$${fmt(amt)}</strong></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:var(--muted);font-size:.83rem">Duration</span><strong>${term} months</strong></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:var(--muted);font-size:.83rem">Monthly Payment</span><strong>$${fmt(monthly)}</strong></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:var(--muted);font-size:.83rem">Total Repayable</span><strong>$${fmt(total)}</strong></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);font-size:.83rem">Purpose</span><strong>${purpose}</strong></div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-primary btn-full" onclick="confirmLoan(${amt},${term},'${purpose.replace(/'/g,"\\'")}',${monthly},${total})">CONFIRM LOAN</button>
+        <button class="btn-ghost btn-full" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>`);
+};
+function confirmLoan(amt,term,purpose,monthly,total){
+  S.balance+=amt;
+  const loan={id:uid(),amt,term,purpose,monthly,total,paid:0,remaining:total,status:'active',date:nowStr()};
+  S.loans.push(loan);
+  addTx('loan',amt,'Loan Disbursed','💼 Loan',purpose);
+  toast('✓ Loan of $'+fmt(amt)+' approved and disbursed!','s');
+  renderLoans();closeModal();
+  document.getElementById('loanAmt').value='';
+}
+function renderLoans(){
+  const el=document.getElementById('loansList');
+  if(!S.loans.length){el.innerHTML='<div class="empty" style="padding:24px 0">No active loans</div>';return;}
+  el.innerHTML=S.loans.map(l=>{
+    const pct=Math.min((l.paid/l.total)*100,100);
+    return`<div class="loan-card">
+      <div class="loan-header">
+        <div><div style="font-size:.86rem;font-weight:600;color:#fff">${l.purpose}</div><div class="loan-id">${l.id} · ${l.date}</div></div>
+        <div class="loan-badge ${l.status==='active'?'lb-active':l.status==='pending'?'lb-pending':'lb-paid'}">${l.status}</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+        <div><div style="font-size:.72rem;color:var(--muted)">Remaining</div><div style="font-family:'JetBrains Mono',monospace;font-size:.95rem;color:#fff">$${fmt(l.remaining)}</div></div>
+        <div style="text-align:right"><div style="font-size:.72rem;color:var(--muted)">Monthly</div><div style="font-family:'JetBrains Mono',monospace;font-size:.95rem;color:var(--gold)">$${fmt(l.monthly)}</div></div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-top:4px;"><span>$${fmt(l.paid)} paid</span><span>$${fmt(l.total)} total</span></div>
+      ${l.status==='active'?`<div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn-primary" style="flex:1;padding:8px;font-size:.78rem;" onclick="repayLoan('${l.id}',${l.monthly})">PAY INSTALLMENT ($${fmt(l.monthly)})</button>
+        <button class="btn-ghost" style="padding:8px 13px;font-size:.78rem;" onclick="repayLoanFull('${l.id}')">Pay Full</button>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+function repayLoan(id,amt){
+  const loan=S.loans.find(l=>l.id===id);if(!loan)return;
+  if(amt>S.balance){toast('⚠ Insufficient balance!','e');return;}
+  S.balance-=amt;S.totalWith+=amt;
+  loan.paid+=amt;loan.remaining-=amt;
+  if(loan.remaining<=0){loan.remaining=0;loan.status='paid';}
+  addTx('repay',amt,'Loan Repayment','✅ Loan',loan.id);
+  toast('✓ Installment of $'+fmt(amt)+' paid!','s');
+  renderLoans();updateAllUI();
+}
+function repayLoanFull(id){
+  const loan=S.loans.find(l=>l.id===id);if(!loan)return;
+  if(loan.remaining>S.balance){toast('⚠ Insufficient balance for full repayment!','e');return;}
+  repayLoan(id,loan.remaining);
+}
+
+// ══════════════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════════════
+function openModal(title,body){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalBody').innerHTML=body;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// ══════════════════════════════════════════════════
+//  LOGOUT
+// ══════════════════════════════════════════════════
+function logout(){
+  sessionStorage.removeItem('tsbank_user');
+  location.href='index.html';
+}
+
+// ══════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════
+updateAllUI();
+renderTxLists();
+drawSpinWheel();
+
+// Set rewards badge
+if(S.lastCheckin!==todayStr()){
+  document.getElementById('rewardsBadge').style.display='';
+}else{
+  document.getElementById('rewardsBadge').style.display='none';
+}
+</script>
+</body>
+</html>
